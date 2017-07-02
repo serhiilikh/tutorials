@@ -1,3 +1,4 @@
+# первый вариант
 index = 3
 result = 1
 while index > 0:
@@ -5,6 +6,7 @@ while index > 0:
     index -= 1
 print(result)
 
+# второй вариант
 index = 3
 result = 1
 def factorial(result, index):
@@ -13,5 +15,4 @@ def factorial(result, index):
         factorial(result, index-1)
     if index == 1:
         print(result)
-
 factorial(result, index)

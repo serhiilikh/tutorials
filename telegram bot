@@ -1,0 +1,29 @@
+from telebot import TeleBot, types
+from random import randint
+from config import TOKEN, resolutions
+markup = types.ReplyKeyboardMarkup()
+bot = TeleBot(TOKEN)
+markup.row('/random')
+
+def get_random_reso():
+    return resolutions[randint(0, len(resolutions)-1)]
+
+
+@bot.message_handler(commands=['random'])
+def handle_start_help(message):
+    bot.send_message(message.chat.id, get_random_reso(),reply_markup=markup)
+
+@bot.message_handler(commands=['start', 'help'])
+def handle_start_help(message):
+    bot.send_message(message.chat.id, "Привет! Сейчас я умею присылать резолюцию по номеру, который ты мне отправишь",
+                     reply_markup=markup)
+
+
+@bot.message_handler(func=lambda message: True, content_types=['text'])
+def reply_msg(message):
+    if message.text.isdigit:
+        reso = resolutions[round(int(message.text)) % len(resolutions)- 1]
+        bot.send_message(message.chat.id, reso, reply_markup=markup)
+
+if __name__ == '__main__':
+    bot.polling(none_stop=True, interval=10)

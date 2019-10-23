@@ -1,0 +1,68 @@
+import sys
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QPushButton, QTableWidget, QFileDialog
+from PyQt5.QtCore import QSize
+from PyQt5 import QtGui
+
+
+class Window(QMainWindow):
+
+    def __init__(self):
+        QMainWindow.__init__(self)
+        self.setMinimumSize(QSize(640, 480))
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+        self.gridLayout = QGridLayout(self)
+        central_widget.setLayout(self.gridLayout)
+
+        def add_btn(self, name, func):
+            tmp = QPushButton(name, self)
+            self.gridLayout.addWidget(tmp)
+            tmp.clicked.connect(func)
+
+        buttons = {"Save": self._save, '+ row': self._add_row, "- row": self._remove_row, "+ col": self._add_col,
+                   "- col": self._remove_col}
+
+        for name, func in buttons.items():
+            add_btn(self, name, func)
+
+        self.table = QTableWidget()
+        self.gridLayout.addWidget(self.table)
+        self._add_col()
+        self._add_row()
+
+    def _save(self):
+        filename, _ = QFileDialog.getSaveFileName(self)
+        if filename:
+            doc = QtGui.QTextDocument()
+            cursor = QtGui.QTextCursor(doc)
+            row_count = self.table.rowCount()
+            col_count = self.table.columnCount()
+            cursor.insertTable(row_count, col_count)
+            for row in range(row_count):
+                for column in range(col_count):
+                    cursor.insertText(self.table.item(row, column).text())
+                    cursor.movePosition(QtGui.QTextCursor.NextCell)
+            writer = QtGui.QTextDocumentWriter()
+            writer.setFormat(writer.supportedDocumentFormats()[1])
+            writer.setFileName(filename.split(sep="/")[-1]+".odf")
+            writer.write(doc)
+
+    def _add_row(self):
+        self.table.insertRow(self.table.rowCount())
+
+    def _remove_row(self):
+        self.table.removeRow(self.table.rowCount()-1)
+
+    def _add_col(self):
+        self.table.insertColumn(self.table.columnCount())
+
+    def _remove_col(self):
+        self.table.removeColumn(self.table.columnCount()-1)
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    mainWin = Window()
+    mainWin.show()
+    sys.exit(app.exec_())

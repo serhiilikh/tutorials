@@ -1,0 +1,26 @@
+import scrapy
+from json import dump
+class QuotesSpider(scrapy.Spider):
+    name = "reserved"
+
+    def start_requests(self):
+        urls = [
+            'https://www.reserved.com/gb/en/man/all/clothes/new-in',
+            # 'https://www.reserved.com/ua/ru/man/all/clothes/bestsellers-ua'
+        ]
+        for url in urls:
+            yield scrapy.Request(url=url, callback=self.parse)
+
+    def parse(self, response):
+        page = response.url.split("/")[-2]
+        items = response.css("article")
+        results = {}
+        for item in items:
+            name = item.css("figcaption").css("a::text").extract()[0]
+            final_price = item.css("section").css("p").css("span::text").extract()[0]
+            final_price = final_price[:final_price.index(".")+3] + " GBP"
+            results[name] = final_price
+        filename = 'items-%s.html' % page
+        print(results)
+        with open(filename, 'w') as f:
+            dump(results, f)

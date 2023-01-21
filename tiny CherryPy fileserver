@@ -1,0 +1,49 @@
+import os
+import cherrypy
+
+
+class Root(object):
+    pass
+
+
+@cherrypy.expose
+class FileService(object):
+    def GET(self, filename):
+        if not os.path.exists(filename):
+            cherrypy.response.status = 404
+            return
+        cherrypy.response.headers["Content-Type"] = "application"
+        with open(filename, "rb") as f:
+            return f.read()
+
+    def POST(self, file):
+        upload_path = os.path.dirname(__file__)
+        upload_filename = file.filename
+        upload_file = os.path.normpath(os.path.join(upload_path, upload_filename))
+        size = 0
+        with open(upload_file, "wb") as out:
+            while True:
+                data = file.file.read(8192)
+                if not data:
+                    break
+                out.write(data)
+                size += len(data)
+
+    def HEAD(self, filename):
+        try:
+            cherrypy.response.headers["File-Stat"] = str(os.stat(filename))
+        except FileNotFoundError:
+            cherrypy.response.status = 404
+
+
+if __name__ == "__main__":
+    PATH = os.path.abspath(os.path.dirname(__file__))
+    conf = {
+        "/": {
+            "request.dispatch": cherrypy.dispatch.MethodDispatcher(),
+            "tools.sessions.on": True,
+            "tools.response_headers.on": True,
+            "tools.response_headers.headers": [("Content-Type", "text/plain")],
+        }
+    }
+    cherrypy.quickstart(FileService(), "/files", conf)
